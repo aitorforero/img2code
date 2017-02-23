@@ -1,4 +1,6 @@
 ﻿Public Class Form1
+    Const BITS = 16
+
     Private Sub OpenToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles OpenToolStripMenuItem.Click
         OpenFile()
     End Sub
@@ -6,6 +8,8 @@
     Private Sub OpenFile()
         Dim dlg As New OpenFileDialog
         If dlg.ShowDialog = DialogResult.OK Then
+            Dim code As New Text.StringBuilder
+
             Dim imageInMemory As New IO.MemoryStream
             Dim ReadingStream = IO.File.OpenRead(dlg.FileName)
             Dim Buffer(2047) As Byte
@@ -20,7 +24,7 @@
 
             Dim image As Bitmap = Bitmap.FromStream(imageInMemory)
             SourcePictureBox.Image = image
-            Dim BitArray As New Text.StringBuilder
+            Dim ImageBitArray As New List(Of Byte)
 
             Dim Palette As New Dictionary(Of Color, Integer)
             For y = 0 To image.Height - 1
@@ -31,60 +35,69 @@
                     Else
                         Palette(PixelColor) += 1
                     End If
-                    'BitArray.Append("1".PadLeft(Palette.IndexOf(PixelColor) + 1, "0"))
                 Next
             Next
-            ' BitArray.Append(New String("0"c, 8 - (BitArray.Length Mod 8)))
 
             Dim OrderedPalette = Palette.OrderByDescending(Function(ColorCount) ColorCount.Value).Select(Function(ColorCount) ColorCount.Key).ToList
+
+            Dim BitsPerPixel As Integer = (OrderedPalette.Count - 1) \ 2 + 1
+
             For y = 0 To image.Height - 1
                 For x = 0 To image.Width - 1
                     Dim PixelColor = image.GetPixel(x, y)
-                    BitArray.Append("1".PadLeft(OrderedPalette.IndexOf(PixelColor) + 1, "0"))
+                    Convert.ToString(OrderedPalette.IndexOf(PixelColor), 2).PadLeft(BitsPerPixel, "0").ToList.ForEach(
+                        Sub(b) ImageBitArray.Add(Byte.Parse(b)))
                 Next
             Next
-            BitArray.Append(New String("0"c, 8 - (BitArray.Length Mod 8)))
 
+            If ImageBitArray.Count Mod BITS > 0 Then
+                For i = (BITS - ImageBitArray.Count Mod BITS) To 1 Step -1
+                    ImageBitArray.Add(0)
+                Next
+            End If
 
-            Dim BitArrayString = BitArray.ToString
-            Dim code As New Text.StringBuilder
-            Dim ByteArray As New List(Of Byte)
-            For i = 0 To BitArray.Length - 1 Step 8
-                Dim CurrentByte As Byte = Convert.ToByte(BitArrayString.Substring(i, 8), 2)
-                ByteArray.Add(CurrentByte)
-                code.Append(Hex(CurrentByte) + ";")
+            Dim ImageByteArray As New List(Of String)
+            For i = 0 To ImageBitArray.Count - 1 Step BITS
+                ImageByteArray.Add("0x" + Hex(Convert.ToUInt32(String.Concat(ImageBitArray.Skip(i).Take(BITS).Select(Function(b) b.ToString)), 2)).PadLeft((BITS \ 8) * 2, "0"))
             Next
 
-            Dim SafeFileName As String = IO.Path.GetFileNameWithoutExtension(dlg.FileName)
+
+
+
+
+            Dim SafeFileName As String = ImageNameTextBox.Text
+
+            code.AppendLine("#ifndef _" + SafeFileName + "Image_h")
+            code.AppendLine("#define _" + SafeFileName + "Image_h")
+            code.AppendLine()
+            code.AppendLine("/********************************************************")
+            code.AppendFormat(" * Source        : {0}", IO.Path.GetFileName(dlg.FileName)) : code.AppendLine()
+            code.AppendFormat(" * Size          : {0}x{1}", image.Width, image.Height) : code.AppendLine()
+            code.AppendFormat(" * Bits/Pixel    : {0}", BitsPerPixel) : code.AppendLine()
+            code.AppendFormat(" * Palette colors: {0}", OrderedPalette.Count) : code.AppendLine()
+            code.AppendFormat(" * Mem Size      : {0}Bytes", 6 + ImageByteArray.Count + OrderedPalette.Count * 4) : code.AppendLine()
+            code.AppendLine(" ********************************************************/")
+            code.AppendLine()
 
             code.AppendLine()
-            code.AppendLine("/*")
-            code.AppendLine(String.Format("Image Bytes = {0}", image.Height * image.Width * 4))
-            code.AppendLine(String.Format("BitArray Bytes = {0}", ByteArray.Count))
-            code.AppendLine(String.Format("Pallete length = {0}", Palette.Count))
-            code.AppendLine("*/")
-            code.AppendLine()
-            code.AppendFormat("// {0} ************************************************************", IO.Path.GetFileName(dlg.FileName)) : code.AppendLine()
-            code.AppendFormat("Const uint8_t PROGMEM {0}_palette[][4] = {{", SafeFileName) : code.AppendLine()
-            code.AppendLine(String.Join("," + vbCrLf, OrderedPalette.Select(Function(c) String.Format(vbTab + "{{{0,4},{1,4},{2,4},{3,4}}}", c.A, c.R, c.G, c.B))))
-            code.AppendLine("}")
-            code.AppendFormat("Const uint8_t PROGMEM {0}_image[] = {{", SafeFileName) : code.AppendLine()
-            Dim Pos As Integer = 0
-            While Pos < ByteArray.Count
-                Dim Max As Integer = 32
-                If (ByteArray.Count - Pos - 1) < Max Then
-                    Max = ByteArray.Count - Pos - 1
-                End If
-
-                String.Join("," + ByteArray.Skip(Pos).Take(Max).Select(Function(B) B.ToString))
-            End While
-            For i = 0 To BitArray.Length - 1 Step 8
-                Dim CurrentByte As Byte = Convert.ToByte(BitArrayString.Substring(i, 8), 2)
-                ByteArray.Add(CurrentByte)
-                code.Append(Hex(CurrentByte) + ";")
+            code.AppendFormat("Const Image {0}Image  PROGMEM = {{", SafeFileName) : code.AppendLine()
+            code.AppendFormat(vbTab + "{0}, {1}, {2}, {3}, ", image.Width, image.Height, OrderedPalette.Count, BitsPerPixel) : code.AppendLine()
+            code.AppendLine(vbTab + "{ // *** Image Data ***")
+            Dim ByteArray As New List(Of String)
+            For i = 0 To ImageByteArray.Count - 1 Step 16
+                ByteArray.Add(vbTab + vbTab + String.Join(", ", ImageByteArray.Skip(i).Take(16)))
             Next
-            code.AppendLine(String.Join("," + vbCrLf, OrderedPalette.Select(Function(c) String.Format(vbTab + "{{{0,4},{1,4},{2,4},{3,4}}}", c.A, c.R, c.G, c.B))))
+            code.AppendLine(String.Join("," + vbCrLf, ByteArray))
+            code.AppendLine(vbTab + "},")
+
+            code.AppendLine(vbTab + "{ // *** Color Palette ***")
+            code.AppendLine(String.Join("," + vbCrLf, OrderedPalette.Select(Function(c) String.Format(vbTab + vbTab + "{{{0,4},{1,4},{2,4},{3,4}}}", c.A, c.R, c.G, c.B))))
+            code.AppendLine(vbTab + "}")
+
+
             code.AppendLine("}")
+
+            code.AppendLine("#endif")
 
 
             CodeRichTextBox.Text = code.ToString
@@ -93,6 +106,7 @@
         dlg.Dispose()
     End Sub
 End Class
+
 
 
 'typedef struct {

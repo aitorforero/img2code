@@ -23,23 +23,17 @@ Partial Class Form1
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
         Me.SplitContainer1 = New System.Windows.Forms.SplitContainer()
-        Me.SplitContainer2 = New System.Windows.Forms.SplitContainer()
         Me.SourcePictureBox = New System.Windows.Forms.PictureBox()
-        Me.PictureBox2 = New System.Windows.Forms.PictureBox()
         Me.CodeRichTextBox = New System.Windows.Forms.RichTextBox()
         Me.MenuStrip1 = New System.Windows.Forms.MenuStrip()
         Me.FileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.OpenToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ImageNameTextBox = New System.Windows.Forms.TextBox()
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SplitContainer1.Panel1.SuspendLayout()
         Me.SplitContainer1.Panel2.SuspendLayout()
         Me.SplitContainer1.SuspendLayout()
-        CType(Me.SplitContainer2, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.SplitContainer2.Panel1.SuspendLayout()
-        Me.SplitContainer2.Panel2.SuspendLayout()
-        Me.SplitContainer2.SuspendLayout()
         CType(Me.SourcePictureBox, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -51,7 +45,8 @@ Partial Class Form1
         '
         'SplitContainer1.Panel1
         '
-        Me.SplitContainer1.Panel1.Controls.Add(Me.SplitContainer2)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.SourcePictureBox)
+        Me.SplitContainer1.Panel1.Controls.Add(Me.ImageNameTextBox)
         '
         'SplitContainer1.Panel2
         '
@@ -60,41 +55,15 @@ Partial Class Form1
         Me.SplitContainer1.SplitterDistance = 356
         Me.SplitContainer1.TabIndex = 0
         '
-        'SplitContainer2
-        '
-        Me.SplitContainer2.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.SplitContainer2.Location = New System.Drawing.Point(0, 0)
-        Me.SplitContainer2.Name = "SplitContainer2"
-        Me.SplitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal
-        '
-        'SplitContainer2.Panel1
-        '
-        Me.SplitContainer2.Panel1.Controls.Add(Me.SourcePictureBox)
-        '
-        'SplitContainer2.Panel2
-        '
-        Me.SplitContainer2.Panel2.Controls.Add(Me.PictureBox2)
-        Me.SplitContainer2.Size = New System.Drawing.Size(356, 469)
-        Me.SplitContainer2.SplitterDistance = 233
-        Me.SplitContainer2.TabIndex = 0
-        '
         'SourcePictureBox
         '
         Me.SourcePictureBox.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.SourcePictureBox.Location = New System.Drawing.Point(0, 0)
+        Me.SourcePictureBox.Location = New System.Drawing.Point(0, 22)
         Me.SourcePictureBox.Name = "SourcePictureBox"
-        Me.SourcePictureBox.Size = New System.Drawing.Size(356, 233)
+        Me.SourcePictureBox.Size = New System.Drawing.Size(356, 447)
         Me.SourcePictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage
         Me.SourcePictureBox.TabIndex = 0
         Me.SourcePictureBox.TabStop = False
-        '
-        'PictureBox2
-        '
-        Me.PictureBox2.Location = New System.Drawing.Point(0, 0)
-        Me.PictureBox2.Name = "PictureBox2"
-        Me.PictureBox2.Size = New System.Drawing.Size(100, 50)
-        Me.PictureBox2.TabIndex = 0
-        Me.PictureBox2.TabStop = False
         '
         'CodeRichTextBox
         '
@@ -127,8 +96,16 @@ Partial Class Form1
         'OpenToolStripMenuItem
         '
         Me.OpenToolStripMenuItem.Name = "OpenToolStripMenuItem"
-        Me.OpenToolStripMenuItem.Size = New System.Drawing.Size(181, 26)
+        Me.OpenToolStripMenuItem.Size = New System.Drawing.Size(129, 26)
         Me.OpenToolStripMenuItem.Text = "Open..."
+        '
+        'ImageNameTextBox
+        '
+        Me.ImageNameTextBox.Dock = System.Windows.Forms.DockStyle.Top
+        Me.ImageNameTextBox.Location = New System.Drawing.Point(0, 0)
+        Me.ImageNameTextBox.Name = "ImageNameTextBox"
+        Me.ImageNameTextBox.Size = New System.Drawing.Size(356, 22)
+        Me.ImageNameTextBox.TabIndex = 1
         '
         'Form1
         '
@@ -141,15 +118,11 @@ Partial Class Form1
         Me.Name = "Form1"
         Me.Text = "img2code"
         Me.SplitContainer1.Panel1.ResumeLayout(False)
+        Me.SplitContainer1.Panel1.PerformLayout()
         Me.SplitContainer1.Panel2.ResumeLayout(False)
         CType(Me.SplitContainer1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.SplitContainer1.ResumeLayout(False)
-        Me.SplitContainer2.Panel1.ResumeLayout(False)
-        Me.SplitContainer2.Panel2.ResumeLayout(False)
-        CType(Me.SplitContainer2, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.SplitContainer2.ResumeLayout(False)
         CType(Me.SourcePictureBox, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MenuStrip1.ResumeLayout(False)
         Me.MenuStrip1.PerformLayout()
         Me.ResumeLayout(False)
@@ -158,11 +131,10 @@ Partial Class Form1
     End Sub
 
     Friend WithEvents SplitContainer1 As SplitContainer
-    Friend WithEvents SplitContainer2 As SplitContainer
     Friend WithEvents SourcePictureBox As PictureBox
-    Friend WithEvents PictureBox2 As PictureBox
     Friend WithEvents CodeRichTextBox As RichTextBox
     Friend WithEvents MenuStrip1 As MenuStrip
     Friend WithEvents FileToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents OpenToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ImageNameTextBox As TextBox
 End Class
