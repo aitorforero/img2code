@@ -40,6 +40,8 @@
 
             Dim OrderedPalette = Palette.OrderByDescending(Function(ColorCount) ColorCount.Value).Select(Function(ColorCount) ColorCount.Key).ToList
 
+            Dim TransparentIndex As Integer = OrderedPalette.IndexOf(OrderedPalette.Where(Function(c) c.A < 255).FirstOrDefault)
+
             Dim BitsPerPixel As Integer = (OrderedPalette.Count - 1) \ 2 + 1
 
             For y = 0 To image.Height - 1
@@ -80,19 +82,19 @@
             code.AppendLine()
 
             code.AppendLine()
-            code.AppendFormat("Const Image {0}Image  PROGMEM = {{", SafeFileName) : code.AppendLine()
-            code.AppendFormat(vbTab + "{0}, {1}, {2}, {3}, ", image.Width, image.Height, OrderedPalette.Count, BitsPerPixel) : code.AppendLine()
+            code.AppendFormat("Const ImageData {0}Image  PROGMEM = {{", SafeFileName) : code.AppendLine()
+            code.AppendFormat(vbTab + "{0}, {1}, {2}, {3}, {4} ", image.Width, image.Height, OrderedPalette.Count, TransparentIndex, BitsPerPixel) : code.AppendLine()
+            code.AppendLine(vbTab + "{ // *** Color Palette ***")
+            code.AppendLine(String.Join("," + vbCrLf, OrderedPalette.Select(Function(c) String.Format(vbTab + vbTab + "0x{0}", Get16BitColor(c)))))
+            code.AppendLine(vbTab + "},")
             code.AppendLine(vbTab + "{ // *** Image Data ***")
             Dim ByteArray As New List(Of String)
             For i = 0 To ImageByteArray.Count - 1 Step 16
                 ByteArray.Add(vbTab + vbTab + String.Join(", ", ImageByteArray.Skip(i).Take(16)))
             Next
             code.AppendLine(String.Join("," + vbCrLf, ByteArray))
-            code.AppendLine(vbTab + "},")
-
-            code.AppendLine(vbTab + "{ // *** Color Palette ***")
-            code.AppendLine(String.Join("," + vbCrLf, OrderedPalette.Select(Function(c) String.Format(vbTab + vbTab + "{{{0,4},{1,4},{2,4},{3,4}}}", c.A, c.R, c.G, c.B))))
             code.AppendLine(vbTab + "}")
+
 
 
             code.AppendLine("}")
@@ -105,6 +107,18 @@
 
         dlg.Dispose()
     End Sub
+
+    Private Function Get16BitColor(c As Color) As String
+        Dim Red As Byte = c.R / 255 * 31
+        Dim Green As Byte = c.G / 255 * 63
+        Dim Blue As Byte = c.B / 255 * 31
+
+        Dim Color As Integer = Red * 2 ^ 11 + Green * 2 ^ 5 + Blue ' (5 6 5)
+
+        Return Hex(Color).PadLeft(4, "0")
+
+    End Function
+
 End Class
 
 
@@ -125,3 +139,14 @@ End Class
 '  { PALETTE4 ,    9, (const uint8_t *)palette05, pixels05 },
 '  { PALETTE4 ,   26, (const uint8_t *)palette06, pixels06 }
 '};
+
+
+'typedef struct {
+'  uint16_t        width;    
+'  uint16_t        height;  
+'  uint8_t         paletteLength;   
+'  uint8_t         transparentColor;  
+'  uint8_t         bitsPerPixel;  
+'  Const uint16_t   *palette; 
+'  Const uint16_t   *pixels;  
+'} ImageData;
